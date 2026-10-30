@@ -28,7 +28,6 @@ var registrations = []healthcheck.Registration{
 	harvesterhci.RegisterAddonCheck,
 	harvesterhci.RegisterSupportBundleCheck,
 	harvesterhci.RegisterUpgradeLogCheck,
-	harvesterhci.RegisterSettingCheck,
 	harvesterhci.RegisterVolumeRemoteBackupCheck,
 	harvesterhci.RegisterVolumeRemoteRestoreCheck,
 }
