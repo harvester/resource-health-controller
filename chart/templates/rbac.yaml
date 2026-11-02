@@ -12,7 +12,7 @@ rules:
   verbs: [ "*" ]
 # resources that are checked
 - apiGroups: [ "harvesterhci.io" ]
-  resources: [ "virtualmachinebackups", "schedulevmbackups", "virtualmachineimages", "upgrades", "addons", "supportbundles", "upgradelogs", "settings", "volumeremotebackups", "volumeremoterestores" ]
+  resources: [ "virtualmachinebackups", "schedulevmbackups", "virtualmachineimages", "upgrades", "addons", "supportbundles", "upgradelogs", "volumeremotebackups", "volumeremoterestores" ]
   verbs: [ "get", "watch", "list" ]
 - apiGroups: [ "" ]
   resources: [ "nodes" ]

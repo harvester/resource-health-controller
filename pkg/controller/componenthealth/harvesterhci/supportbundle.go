@@ -20,10 +20,13 @@ const (
 	supportBundleComponentHealthName = "harvester-controller-supportbundle"
 	supportBundleKind                = "SupportBundle"
 
-	checkKeySupportBundleFailed = "SupportBundleFailed"
+	checkKeySupportBundleFailed     = "SupportBundleFailed"
+	checkKeySupportBundleGenerating = "SupportBundleGenerating"
 
 	// supportBundleStateError is the state the support bundle controller sets when the generation fails or times out
 	supportBundleStateError = "error"
+	// supportBundleStateGenerating is the state while the support bundle is being collected
+	supportBundleStateGenerating = "generating"
 )
 
 type supportBundleCheck struct {
@@ -58,6 +61,7 @@ func (c *supportBundleCheck) Reconcile() error {
 	}
 
 	groups := healthcheck.ResourceGroups{}
+	generating := healthcheck.ResourceGroups{}
 	for _, bundle := range bundles {
 		if bundle.DeletionTimestamp != nil {
 			continue
@@ -65,6 +69,9 @@ func (c *supportBundleCheck) Reconcile() error {
 		if bundle.Status.State == supportBundleStateError || harvesterv1.SupportBundleInitialized.IsFalse(bundle) {
 			name := healthcheck.NamespacedName(bundle.Namespace, bundle.Name)
 			groups.Add(checkKeySupportBundleFailed, name, supportBundleMessage(bundle, name))
+		} else if bundle.Status.State == supportBundleStateGenerating {
+			name := healthcheck.NamespacedName(bundle.Namespace, bundle.Name)
+			generating.Add(checkKeySupportBundleGenerating, name, supportBundleMessage(bundle, name))
 		}
 	}
 
@@ -73,6 +80,16 @@ func (c *supportBundleCheck) Reconcile() error {
 		checks[key] = healthcheck.NewCheckResult(healthcheck.CheckResultSpec{
 			Severity:   healthv1.SeverityError,
 			Summary:    fmt.Sprintf("%d SupportBundle(s)", len(group.Names)),
+			APIVersion: harvesterv1.SchemeGroupVersion.String(),
+			Kind:       supportBundleKind,
+			Names:      group.Names,
+			Messages:   healthcheck.SortedMessages(group.Messages),
+		})
+	}
+	for key, group := range generating {
+		checks[key] = healthcheck.NewCheckResult(healthcheck.CheckResultSpec{
+			Severity:   healthv1.SeverityInfo,
+			Summary:    fmt.Sprintf("%d SupportBundle(s) generating", len(group.Names)),
 			APIVersion: harvesterv1.SchemeGroupVersion.String(),
 			Kind:       supportBundleKind,
 			Names:      group.Names,

@@ -25,9 +25,10 @@ func TestReconcileSupportBundles(t *testing.T) {
 		conditions []harvesterv1.Condition
 		deleting   bool
 		failed     bool
+		info       bool
 	}{
 		{name: "new support bundle"},
-		{name: "generating", state: "generating"},
+		{name: "generating", state: "generating", info: true},
 		{name: "ready", state: "ready", conditions: []harvesterv1.Condition{
 			{Type: harvesterv1.SupportBundleInitialized, Status: corev1.ConditionTrue},
 		}},
@@ -59,6 +60,14 @@ func TestReconcileSupportBundles(t *testing.T) {
 			}
 			health, err := healthset.HealthV1beta1().ComponentHealths().Get(context.Background(), supportBundleComponentHealthName, metav1.GetOptions{})
 			if !assert.NoError(t, err) {
+				return
+			}
+			if tc.info {
+				assert.Len(t, health.Status.Checks, 1)
+				check := health.Status.Checks[checkKeySupportBundleGenerating]
+				assert.Equal(t, healthv1.SeverityInfo, check.Severity)
+				assert.Equal(t, 1, check.AffectedCount)
+				assert.Contains(t, check.AffectedResources.Names, "harvester-system/bundle-a")
 				return
 			}
 			if !tc.failed {
